@@ -1,45 +1,34 @@
 import streamlit as st
-import requests
 import os
 
-# إعداد الواجهة الكوردية
-st.set_page_config(page_title="دروستکەری ڤیدیۆ", layout="centered")
+# إعداد الواجهة
+st.set_page_config(page_title="Kurdish AI Video", layout="centered")
 
 st.markdown("""
     <style>
     .stTextArea, .stMarkdown, .stTitle, .stSubheader { text-align: right; direction: rtl; }
-    .stButton>button { width: 100%; background-color: #FF4B4B; color: white; border-radius: 12px; height: 3em; }
+    .stButton>button { width: 100%; background-color: #FF4B4B; color: white; border-radius: 12px; }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("🎥 دروستکەری ڤیدیۆی زیرەک")
 st.subheader("وەسفی ڤیدیۆکە بە زمانی کوردی بنووسە")
 
-# وظيفة الترجمة الذكية (تستخدم رابط جوجل المباشر) لضمان عدم حدوث خطأ "invalid language"
-def translate_to_en(text):
-    try:
-        url = f"https://translate.googleapis.com{text}"
-        response = requests.get(url)
-        return response.json()[0][0][0]
-    except:
-        return text # إذا فشل، يرسل النص كما هو
-
 sorani_input = st.text_area("چی لە خەیاڵتە؟", placeholder="بۆ نموونە: پیاوێکی کورد لە ناو قەڵای هەولێر...")
 
 if st.button("دروستکردنی ڤیدیۆ"):
     if sorani_input.strip():
-        with st.spinner('خەریکی وەرگێڕان و دروستکردنی ڤیدیۆکەین... تکایە چاوەڕێ بکە'):
+        with st.spinner('خەریکی دروستکردنی ڤیدیۆکەین... تکایە چاوەڕێ بکە'):
             try:
                 from gradio_client import Client
                 
-                # ترجمة النص داخلياً
-                english_text = translate_to_en(sorani_input)
-                st.info(f"وەسفی وەرگێڕدراو: {english_text}")
+                # إرسال النص مباشرة للمحرك مع إضافة وصف سينمائي
+                # الذكاء الاصطناعي الحديث بدأ يفهم كلمات مثل (Kurd, Kurdistan, Erbil) حتى لو كتبت بالكردية
+                final_prompt = f"{sorani_input}, cinematic style, 4k, realistic, historical"
 
-                # الاتصال بمحرك الفيديو
                 client = Client("THUDM/CogVideoX-5B-Space")
                 result = client.predict(
-                    prompt=english_text + ", cinematic style, 4k",
+                    prompt=final_prompt,
                     seed=42,
                     api_name="/generate"
                 )
@@ -52,6 +41,7 @@ if st.button("دروستکردنی ڤیدیۆ"):
                 else:
                     st.error("سێرڤەرەکە وەڵامی نەبوو.")
             except Exception as e:
-                st.error(f"هەڵەیەک ڕوویدا: {str(e)}")
+                # هذا السطر سيظهر لنا الخطأ الحقيقي إذا لم يكن من المترجم
+                st.error(f"کێشەیەک لە سێرڤەر هەیە: {str(e)}")
     else:
         st.warning("تکایە وەسفێک بنووسە!")
