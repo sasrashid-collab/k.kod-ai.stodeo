@@ -1,8 +1,8 @@
 import streamlit as st
+import requests
 import os
-from deep_translator import GoogleTranslator
 
-# إعداد الواجهة
+# إعداد الواجهة الكوردية
 st.set_page_config(page_title="دروستکەری ڤیدیۆ", layout="centered")
 
 st.markdown("""
@@ -15,22 +15,34 @@ st.markdown("""
 st.title("🎥 دروستکەری ڤیدیۆی زیرەک")
 st.subheader("وەسفی ڤیدیۆکە بە زمانی کوردی بنووسە")
 
-sorani_input = st.text_area("چی لە خەیاڵتە؟", placeholder="بۆ نموونە: ئەسپێکی سپی...")
+# وظيفة الترجمة الذكية (تستخدم رابط جوجل المباشر) لضمان عدم حدوث خطأ "invalid language"
+def translate_to_en(text):
+    try:
+        url = f"https://translate.googleapis.com{text}"
+        response = requests.get(url)
+        return response.json()[0][0][0]
+    except:
+        return text # إذا فشل، يرسل النص كما هو
+
+sorani_input = st.text_area("چی لە خەیاڵتە؟", placeholder="بۆ نموونە: پیاوێکی کورد لە ناو قەڵای هەولێر...")
 
 if st.button("دروستکردنی ڤیدیۆ"):
     if sorani_input.strip():
-        with st.spinner('خەریکی وەرگێڕان و دروستکردنی ڤیدیۆکەین...'):
+        with st.spinner('خەریکی وەرگێڕان و دروستکردنی ڤیدیۆکەین... تکایە چاوەڕێ بکە'):
             try:
                 from gradio_client import Client
                 
-                # استخدام المترجم المستقر الجديد (تلقائي الكشف)
-                translated_text = GoogleTranslator(source='auto', target='en').translate(sorani_input)
-                english_prompt = translated_text + ", cinematic, 4k, realistic"
-                
-                st.info(f"وەسفی وەرگێڕدراو: {translated_text}")
+                # ترجمة النص داخلياً
+                english_text = translate_to_en(sorani_input)
+                st.info(f"وەسفی وەرگێڕدراو: {english_text}")
 
+                # الاتصال بمحرك الفيديو
                 client = Client("THUDM/CogVideoX-5B-Space")
-                result = client.predict(prompt=english_prompt, seed=42, api_name="/generate")
+                result = client.predict(
+                    prompt=english_text + ", cinematic style, 4k",
+                    seed=42,
+                    api_name="/generate"
+                )
 
                 if result and os.path.exists(result):
                     st.success("ڤیدیۆکە بە سەرکەوتوویی دروستکرا!")
@@ -42,4 +54,4 @@ if st.button("دروستکردنی ڤیدیۆ"):
             except Exception as e:
                 st.error(f"هەڵەیەک ڕوویدا: {str(e)}")
     else:
-        st.warning("تکایە سەرەتا وەسفێک بنووسە!")
+        st.warning("تکایە وەسفێک بنووسە!")
