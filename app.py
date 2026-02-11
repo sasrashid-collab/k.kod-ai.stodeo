@@ -1,24 +1,7 @@
 import streamlit as st
-import subprocess
-import sys
 import os
 
-# --- خطوة إجبارية لتثبيت المكتبات لضمان عمل التطبيق ---
-def install_requirements():
-    try:
-        from googletrans import Translator
-        from gradio_client import Client
-    except ImportError:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "googletrans==4.0.0-rc1", "gradio_client"])
-        st.rerun()
-
-# تشغيل التثبيت التلقائي
-install_requirements()
-
-from googletrans import Translator
-from gradio_client import Client
-
-# --- إعداد واجهة التطبيق بالكردية ---
+# إعداد الواجهة
 st.set_page_config(page_title="دروستکەری ڤیدیۆ", layout="centered")
 
 st.markdown("""
@@ -31,17 +14,19 @@ st.markdown("""
 st.title("🎥 دروستکەری ڤیدیۆی زیرەک")
 st.subheader("وەسفی ڤیدیۆکە بە زمانی کوردی بنووسە")
 
-# مدخل النص
-sorani_input = st.text_area("چی لە خەیاڵتە؟", placeholder="بۆ نموونە: ئەسپێکی سپی لە کاتی خۆرئاوابوون...")
+sorani_input = st.text_area("چی لە خەیاڵتە؟", placeholder="بۆ نموونە: ئەسپێکی سپی...")
 
 if st.button("دروستکردنی ڤیدیۆ"):
     if sorani_input.strip():
-        with st.spinner('خەریکی وەرگێڕان و دروستکردنی ڤیدیۆکەین... تکایە چاوەڕێ بکە'):
+        with st.spinner('خەریکی وەرگێڕان و دروستکردنی ڤیدیۆکەین...'):
             try:
-                # الترجمة والتوليد
+                from googletrans import Translator
+                from gradio_client import Client
+                
+                # تعديل ذكي: جعل اللغة تلقائية لتجنب خطأ "invalid source language"
                 translator = Translator()
-                translation = translator.translate(sorani_input, src='ckb', dest='en')
-                english_prompt = translation.text + ", cinematic, 4k, detailed"
+                translation = translator.translate(sorani_input, dest='en') # حذفنا src='ckb' لتكون تلقائية
+                english_prompt = translation.text + ", cinematic, 4k"
                 
                 st.info(f"وەسفی وەرگێڕدراو: {translation.text}")
 
@@ -56,7 +41,7 @@ if st.button("دروستکردنی ڤیدیۆ"):
                 else:
                     st.error("سێرڤەرەکە وەڵامی نەبوو.")
             except Exception as e:
+                # إذا فشل المترجم، سنحاول إرسال النص كما هو للمحرك كخيار أخير
                 st.error(f"هەڵەیەک ڕوویدا: {str(e)}")
     else:
-        st.warning("تکایە وەسفێک بنووسە!")
-
+        st.warning("تکایە سەرەتا وەسفێک بنووسە!")
