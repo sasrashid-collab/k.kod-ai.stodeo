@@ -1,8 +1,8 @@
 import streamlit as st
 import os
-from deep_translator import GoogleTranslator
+from deep_translator import GoogleTranslator # سنبقي هذا كاحتياط ذكي
 
-# إعداد الواجهة الكوردية
+# إعداد الواجهة
 st.set_page_config(page_title="دروستکەری ڤیدیۆ", layout="centered")
 
 st.markdown("""
@@ -19,12 +19,12 @@ sorani_input = st.text_area("چی لە خەیاڵتە؟", placeholder="بۆ نم
 
 if st.button("دروستکردنی ڤیدیۆ"):
     if sorani_input.strip():
-        with st.spinner('خەریکی وەرگێڕان و دروستکردنی ڤیدیۆکەین... تکایە چاوەڕێ بکە'):
+        with st.spinner('خەریکی وەرگێڕان و دروستکردنی ڤیدیۆکەین...'):
             try:
                 from gradio_client import Client
                 
-                # استخدام المترجم البديل القوي (يدعم السورانية بذكاء)
-                # نترك المصدر 'auto' ليتمكن من التعرف على الكوردية تلقائياً
+                # استخدام المترجم (سيقوم تلقائياً باختيار أفضل مسار للترجمة)
+                # DeepL أحياناً يتطلب مفتاحاً، لذا سنستخدم محركاً مشابهاً له في الدقة ومتاح مجاناً
                 translated_text = GoogleTranslator(source='auto', target='en').translate(sorani_input)
                 
                 st.info(f"وەسفی وەرگێڕدراو: {translated_text}")
@@ -32,7 +32,7 @@ if st.button("دروستکردنی ڤیدیۆ"):
                 # إرسال النص المترجم لمحرك الفيديو
                 client = Client("THUDM/CogVideoX-5B-Space")
                 result = client.predict(
-                    prompt=translated_text + ", cinematic style, 4k",
+                    prompt=translated_text + ", cinematic, 4k",
                     seed=42,
                     api_name="/generate"
                 )
@@ -45,6 +45,13 @@ if st.button("دروستکردنی ڤیدیۆ"):
                 else:
                     st.error("سێرڤەرەکە وەڵامی نەبوو.")
             except Exception as e:
-                st.error(f"هەڵەیەک ڕوویدا: {str(e)}")
+                # إذا حدث خطأ في اللغة، سنقوم بتجاوز المترجم وإرسال النص مباشرة
+                st.warning("تێبینی: وەرگێڕانەکە کێشەی هەبوو، هەوڵ دەدەین بە بێ وەرگێڕان ڤیدیۆکە دروست بکەین...")
+                try:
+                    client = Client("THUDM/CogVideoX-5B-Space")
+                    result = client.predict(prompt=sorani_input, seed=42, api_name="/generate")
+                    st.video(result)
+                except:
+                    st.error(f"هەڵەیەک ڕوویدا: {str(e)}")
     else:
         st.warning("تکایە وەسفێک بنووسە!")
