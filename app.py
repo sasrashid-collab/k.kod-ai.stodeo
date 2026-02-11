@@ -1,13 +1,14 @@
 import streamlit as st
 import os
+from deep_translator import GoogleTranslator
 
-# إعداد الواجهة
-st.set_page_config(page_title="Kurdish AI Video", layout="centered")
+# إعداد الواجهة الكوردية
+st.set_page_config(page_title="دروستکەری ڤیدیۆ", layout="centered")
 
 st.markdown("""
     <style>
     .stTextArea, .stMarkdown, .stTitle, .stSubheader { text-align: right; direction: rtl; }
-    .stButton>button { width: 100%; background-color: #FF4B4B; color: white; border-radius: 12px; }
+    .stButton>button { width: 100%; background-color: #FF4B4B; color: white; border-radius: 12px; height: 3em; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -18,17 +19,20 @@ sorani_input = st.text_area("چی لە خەیاڵتە؟", placeholder="بۆ نم
 
 if st.button("دروستکردنی ڤیدیۆ"):
     if sorani_input.strip():
-        with st.spinner('خەریکی دروستکردنی ڤیدیۆکەین... تکایە چاوەڕێ بکە'):
+        with st.spinner('خەریکی وەرگێڕان و دروستکردنی ڤیدیۆکەین... تکایە چاوەڕێ بکە'):
             try:
                 from gradio_client import Client
                 
-                # إرسال النص مباشرة للمحرك مع إضافة وصف سينمائي
-                # الذكاء الاصطناعي الحديث بدأ يفهم كلمات مثل (Kurd, Kurdistan, Erbil) حتى لو كتبت بالكردية
-                final_prompt = f"{sorani_input}, cinematic style, 4k, realistic, historical"
+                # استخدام المترجم البديل القوي (يدعم السورانية بذكاء)
+                # نترك المصدر 'auto' ليتمكن من التعرف على الكوردية تلقائياً
+                translated_text = GoogleTranslator(source='auto', target='en').translate(sorani_input)
+                
+                st.info(f"وەسفی وەرگێڕدراو: {translated_text}")
 
+                # إرسال النص المترجم لمحرك الفيديو
                 client = Client("THUDM/CogVideoX-5B-Space")
                 result = client.predict(
-                    prompt=final_prompt,
+                    prompt=translated_text + ", cinematic style, 4k",
                     seed=42,
                     api_name="/generate"
                 )
@@ -41,7 +45,6 @@ if st.button("دروستکردنی ڤیدیۆ"):
                 else:
                     st.error("سێرڤەرەکە وەڵامی نەبوو.")
             except Exception as e:
-                # هذا السطر سيظهر لنا الخطأ الحقيقي إذا لم يكن من المترجم
-                st.error(f"کێشەیەک لە سێرڤەر هەیە: {str(e)}")
+                st.error(f"هەڵەیەک ڕوویدا: {str(e)}")
     else:
         st.warning("تکایە وەسفێک بنووسە!")
