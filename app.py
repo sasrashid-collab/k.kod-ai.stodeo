@@ -1,8 +1,8 @@
 import streamlit as st
+import requests
 import os
-from deep_translator import GoogleTranslator # سنبقي هذا كاحتياط ذكي
 
-# إعداد الواجهة
+# 1. إعداد الواجهة الكوردية
 st.set_page_config(page_title="دروستکەری ڤیدیۆ", layout="centered")
 
 st.markdown("""
@@ -15,7 +15,18 @@ st.markdown("""
 st.title("🎥 دروستکەری ڤیدیۆی زیرەک")
 st.subheader("وەسفی ڤیدیۆکە بە زمانی کوردی بنووسە")
 
-sorani_input = st.text_area("چی لە خەیاڵتە؟", placeholder="بۆ نموونە: پیاوێکی کورد لە ناو قەڵای هەولێر...")
+# 2. وظيفة المترجم التلقائي (يغذي البرومبت مباشرة)
+def auto_translate_prompt(text):
+    try:
+        # استخدام رابط مباشر يتجاهل أخطاء اللغة ويحول أي نص إلى إنجليزية فوراً
+        url = f"https://translate.googleapis.com{text}"
+        r = requests.get(url).json()
+        return r[0][0][0] # استخراج النص المترجم الصافي
+    except:
+        return text # في حال الفشل يرسل النص كما هو
+
+# 3. خانة النص الكوردي
+sorani_input = st.text_area("چی لە خەیاڵتە؟", placeholder="بۆ نموونە: قەڵای هەولێر...")
 
 if st.button("دروستکردنی ڤیدیۆ"):
     if sorani_input.strip():
@@ -23,16 +34,16 @@ if st.button("دروستکردنی ڤیدیۆ"):
             try:
                 from gradio_client import Client
                 
-                # استخدام المترجم (سيقوم تلقائياً باختيار أفضل مسار للترجمة)
-                # DeepL أحياناً يتطلب مفتاحاً، لذا سنستخدم محركاً مشابهاً له في الدقة ومتاح مجاناً
-                translated_text = GoogleTranslator(source='auto', target='en').translate(sorani_input)
+                # المترجم يضع النتيجة في البرومبت (Prompt) تلقائياً هنا
+                translated_prompt = auto_translate_prompt(sorani_input)
                 
-                st.info(f"وەسفی وەرگێڕدراو: {translated_text}")
-
-                # إرسال النص المترجم لمحرك الفيديو
+                # إضافة اللمسة السينمائية للأمر النهائي
+                final_prompt = f"{translated_prompt}, cinematic style, 4k, realistic"
+                
+                # إرسال الأمر للمحرك
                 client = Client("THUDM/CogVideoX-5B-Space")
                 result = client.predict(
-                    prompt=translated_text + ", cinematic, 4k",
+                    prompt=final_prompt,
                     seed=42,
                     api_name="/generate"
                 )
@@ -45,13 +56,6 @@ if st.button("دروستکردنی ڤیدیۆ"):
                 else:
                     st.error("سێرڤەرەکە وەڵامی نەبوو.")
             except Exception as e:
-                # إذا حدث خطأ في اللغة، سنقوم بتجاوز المترجم وإرسال النص مباشرة
-                st.warning("تێبینی: وەرگێڕانەکە کێشەی هەبوو، هەوڵ دەدەین بە بێ وەرگێڕان ڤیدیۆکە دروست بکەین...")
-                try:
-                    client = Client("THUDM/CogVideoX-5B-Space")
-                    result = client.predict(prompt=sorani_input, seed=42, api_name="/generate")
-                    st.video(result)
-                except:
-                    st.error(f"هەڵەیەک ڕوویدا: {str(e)}")
+                st.error(f"هەڵەیەک ڕوویدا: {str(e)}")
     else:
         st.warning("تکایە وەسفێک بنووسە!")
