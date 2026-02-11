@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+from deep_translator import GoogleTranslator
 
 # إعداد الواجهة
 st.set_page_config(page_title="دروستکەری ڤیدیۆ", layout="centered")
@@ -20,15 +21,13 @@ if st.button("دروستکردنی ڤیدیۆ"):
     if sorani_input.strip():
         with st.spinner('خەریکی وەرگێڕان و دروستکردنی ڤیدیۆکەین...'):
             try:
-                from googletrans import Translator
                 from gradio_client import Client
                 
-                # تعديل ذكي: جعل اللغة تلقائية لتجنب خطأ "invalid source language"
-                translator = Translator()
-                translation = translator.translate(sorani_input, dest='en') # حذفنا src='ckb' لتكون تلقائية
-                english_prompt = translation.text + ", cinematic, 4k"
+                # استخدام المترجم المستقر الجديد (تلقائي الكشف)
+                translated_text = GoogleTranslator(source='auto', target='en').translate(sorani_input)
+                english_prompt = translated_text + ", cinematic, 4k, realistic"
                 
-                st.info(f"وەسفی وەرگێڕدراو: {translation.text}")
+                st.info(f"وەسفی وەرگێڕدراو: {translated_text}")
 
                 client = Client("THUDM/CogVideoX-5B-Space")
                 result = client.predict(prompt=english_prompt, seed=42, api_name="/generate")
@@ -41,7 +40,6 @@ if st.button("دروستکردنی ڤیدیۆ"):
                 else:
                     st.error("سێرڤەرەکە وەڵامی نەبوو.")
             except Exception as e:
-                # إذا فشل المترجم، سنحاول إرسال النص كما هو للمحرك كخيار أخير
                 st.error(f"هەڵەیەک ڕوویدا: {str(e)}")
     else:
         st.warning("تکایە سەرەتا وەسفێک بنووسە!")
