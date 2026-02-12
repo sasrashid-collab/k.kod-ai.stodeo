@@ -1,44 +1,42 @@
 import streamlit as st
 from gradio_client import Client
+import os
 
-# ١. ڕێکخستنی لاپەڕە
+# ١. ڕێکخستنی شاشە
 st.set_page_config(page_title="ڤیدیۆساز", layout="centered")
 
 st.markdown("""
     <style>
-    .stTextArea, .stTitle, .stSubheader { text-align: right; direction: rtl; }
-    .stButton>button { width: 100%; background-color: #FF4B4B; color: white; border-radius: 10px; height: 3em; font-weight: bold; }
+    .stTextArea, .stTitle { text-align: right; direction: rtl; }
+    .stButton>button { width: 100%; background-color: #4CAF50; color: white; border-radius: 10px; height: 3em; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🎥 دروستکەری ڤیدیۆی کوردی")
-st.subheader("بە کوردی بنووسە، ئێمە دەیکەین بە ڤیدیۆ")
+st.title("🎥 دروستکەری ڤیدیۆی خێرا")
+st.info("تێبینی: تکایە وەسفەکە بە ئینگلیزی بنووسە بۆ ئەوەی سێرڤەرەکە کار بکات")
 
-# ٢. وەرگرتنی نووسینی کوردی
-user_ku = st.text_area("چی دروست بکەم؟", placeholder="بۆ نموونە: هەڵۆیەکی گەورە لەسەر لوتکەی چیا...")
+user_input = st.text_area("چی دروست بکەم؟", placeholder="Example: A cat running in the park...")
 
 if st.button("دروستکردنی ڤیدیۆ"):
-    if user_ku.strip():
-        with st.spinner('خەریکی وەرگێڕان و دروستکردنین... تکایە کەمێک چاوەڕێ بکە'):
+    if user_input.strip():
+        with st.spinner('خەریکی دروستکردنین...'):
             try:
-                # هەنگاوی یەکەم: وەرگێڕان لە ڕێگەی مۆدێلێکی AI (وەک فێڵێک بۆ ئەوەی Error نەدات)
-                # لێرەدا دەتوانیت مۆدێلێکی وەرگێڕانی وەک 'Helsinki-NLP' بەکاربهێنیت یان ڕاستەوخۆ دەقەکە بنێریت
+                # پەیوەندی بە مۆدێلی نوێ
+                client = Client("aliabd/stable-video-diffusion")
                 
-                # بۆ ئەوەی گەنجەکە ماڵوێران نەبێت، دەقە کوردییەکە ڕاستەوخۆ دەنێرین بۆ مۆدێلێکی ڤیدیۆ کە زمانی تر تێدەگات
-                # یان مۆدێلێکی وەرگێڕانی جێگیر بەکاردەهێنین
-                
-                client_vid = Client("aliabd/stable-video-diffusion")
-                
-                # لێرەدا دەتوانیت لە جیاتی وەرگێڕان، تەنها پاشگرێکی ئینگلیزی بۆ زیاد بکەیت 
-                # یان ئەگەر کارت نەکرد، ناچارین داوا لە گەنجەکە بکەین تەنها یەک وشەی ئینگلیزی بنووسێت
-                result = client_vid.predict(user_ku, 42, api_name="/generate_video")
+                # ناردنی پارامیتەرەکان بەو شێوەیەی مۆدێلە نوێیەکە دەیەوێت
+                result = client.predict(
+                    user_input, # prompt
+                    42,         # seed
+                    api_name="/generate_video"
+                )
 
                 if result:
-                    st.success("فەرموو مامۆستا گیان، ڤیدیۆکە ئامادەیە:")
+                    st.success("فەرموو مامۆستا گیان:")
                     st.video(result)
                 else:
-                    st.error("سێرڤەرەکە کەمێک قەرەباڵغە.")
+                    st.error("سێرڤەرەکە وەڵامی نەبوو.")
             except Exception as e:
-                st.error("کێشەیەک لە پەیوەندی سێرڤەر ڕوویدا.")
+                st.error(f"کێشەیەک ڕوویدا: {str(e)}")
     else:
         st.warning("تکایە وەسفێک بنووسە.")
