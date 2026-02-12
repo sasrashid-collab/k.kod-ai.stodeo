@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 
-# 1. إعداد الواجهة الكوردية
+# 1. ڕێکخستنی واژە (UI)
 st.set_page_config(page_title="دروستکەری ڤیدیۆ", layout="centered")
 
 st.markdown("""
@@ -12,20 +12,24 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 st.title("🎥 دروستکەری ڤیدیۆی زیرەک")
-st.subheader("وەسفی ڤیدیۆکە بنووسە")
+st.subheader("وەسفی ڤیدیۆکە بە کوردی یان ئینگلیزی بنووسە")
 
-# 2. خانة إدخال النص (سنتعامل معه كأمر مباشر للمحرك)
-sorani_input = st.text_area("چی لە خەیاڵتە؟", placeholder="بۆ نموونە: Kurdish man, mountains, cinematic...")
+# 2. خانة النص (نكتب فيها أي وصف بسيط)
+user_prompt = st.text_area("چی لە خەیاڵتە؟", placeholder="Example: A horse in the snow...")
 
 if st.button("دروستکردنی ڤیدیۆ"):
-    if sorani_input.strip():
+    if user_prompt.strip():
         with st.spinner('خەریکی دروستکردنی ڤیدیۆکەین...'):
             try:
                 from gradio_client import Client
+                # الاتصال بالمحرك مباشرة بدون مترجم لتجنب الأخطاء
                 client = Client("THUDM/CogVideoX-5B-Space")
                 
-                # نرسل النص مباشرة لتجنب أخطاء الترجمة
-                result = client.predict(prompt=sorani_input + ", 4k, cinematic", seed=42, api_name="/generate")
+                result = client.predict(
+                    prompt=user_prompt + ", cinematic style, 4k",
+                    seed=42,
+                    api_name="/generate"
+                )
 
                 if result and os.path.exists(result):
                     st.success("ڤیدیۆکە بە سەرکەوتوویی دروستکرا!")
@@ -36,3 +40,5 @@ if st.button("دروستکردنی ڤیدیۆ"):
                     st.error("سێرڤەرەکە وەڵامی نەبوو.")
             except Exception as e:
                 st.error(f"کێشەیەک ڕوویدا: {str(e)}")
+    else:
+        st.warning("تکایە وەسفێک بنووسە.")
