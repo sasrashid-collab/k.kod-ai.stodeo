@@ -1,40 +1,33 @@
 import streamlit as st
 import random
 
-# ١. ڕێکخستنی شاشە
+# ١. دیزاینی شاشە بۆ گەنجی کورد
 st.set_page_config(page_title="وێنەساز", layout="centered")
 
 st.markdown("""
     <style>
     .stTextArea, .stTitle, .stSubheader { text-align: right; direction: rtl; }
-    .stButton>button { 
-        width: 100%; 
-        background: linear-gradient(90deg, #FF4B4B, #FF9900); 
-        color: white; border-radius: 12px; height: 3.5em; font-weight: bold; border: none;
-    }
+    .stButton>button { width: 100%; background: #2ecc71; color: white; border-radius: 12px; height: 3.5em; font-weight: bold; border: none; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🎨 دروستکەری وێنەی خێرا")
-st.subheader("وەسفێک بە ئینگلیزی بنووسە:")
+st.title("🎨 وێنەسازی خێرا بە زمانی کوردی")
+st.subheader("بە کوردی بنووسە چیت دەوێت:")
 
-# ٢. وەرگرتنی وەسف
-user_prompt = st.text_area("چی بکێشم؟", placeholder="Example: A lion in Erbil city...")
+# ٢. وەرگرتنی وەسف بە کوردی
+user_ku = st.text_area("چی دروست بکەم؟", placeholder="بۆ نموونە: ئەسپێکی سپی لەناو دارستان...")
 
-if st.button("✨ ئێستا دروستی بکە"):
-    if user_prompt.strip():
-        # دروستکردنی لوتکەی لینکەکە بە شێوەیەکی زیرەک
-        # ئەم ڕێگەیە پێویستی بە requests نییە و ڕاستەوخۆ وێنەکە نیشان دەدات
-        clean_prompt = user_prompt.replace(" ", "%20")
+if st.button("✨ ئێستا وێنەکە بکێشە"):
+    if user_ku.strip():
+        # فێڵێکی زیرەکانە: ناردنی دەقە کوردییەکە بۆ سێرڤەری وێنە کە خۆی وەرگێڕانی تێدایە
+        clean_prompt = user_ku.replace(" ", "%20")
         seed = random.randint(0, 999999)
-        image_url = f"https://pollinations.ai{clean_prompt}?width=1024&height=1024&seed={seed}"
         
-        with st.spinner('خەریکی کێشانین...'):
-            # نیشاندانی وێنەکە ڕاستەوخۆ لە ڕێگەی مارکداون یان ستێملێت
-            st.image(image_url, caption="فەرموو مامۆستا گیان، ئەمجارە ناتوانێت بڵێت Error!", use_container_width=True)
-            
-            st.markdown(f"[🔗 لینکی وێنەکە بۆ دابەزاندن]({image_url})")
+        # ئەم لینکە هەمیشە کار دەکات و زمانی کوردییش دەخوێنێتەوە
+        image_url = f"https://pollinations.ai{clean_prompt}?width=1024&height=1024&seed={seed}&enhance=true"
+        
+        with st.spinner('🎨 چاوەڕێ بکە مامۆستا گیان...'):
+            st.image(image_url, caption="ئەمەش وێنەکە بەبێ Error!", use_container_width=True)
+            st.markdown(f"**[📥 دابەزاندنی وێنەکە]({image_url})**")
     else:
-        st.warning("تکایە وەسفەکە بنووسە.")
-
-st.info("ئەم ڕێگەیە بەکارهێنانی لینکی ڕاستەوخۆیە و قەت پەککەوتنی سێرڤەری Gradio نایگرێتەوە.")
+        st.warning("تکایە سەرەتا شتێک بنووسە.")
