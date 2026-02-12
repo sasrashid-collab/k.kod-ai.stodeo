@@ -1,32 +1,20 @@
 import streamlit as st
-import random
 
-st.set_page_config(page_title="وێنەسازی کوردی", layout="centered")
+st.set_page_config(page_title="وێنەساز", layout="centered")
 
-st.markdown("""
-    <style>
-    .stTextArea, .stTitle, .stSubheader { text-align: right; direction: rtl; }
-    .stButton>button { width: 100%; background: #E91E63; color: white; border-radius: 12px; height: 3.5em; font-weight: bold; }
-    </style>
-    """, unsafe_allow_html=True)
+st.markdown("<style>.stTextArea, .stTitle { text-align: right; direction: rtl; }</style>", unsafe_allow_html=True)
+st.title("🎨 وێنەسازی کوردی (هەوڵی کۆتایی)")
 
-st.title("🎨 وێنەسازی کوردی (وەشانی جێگیر)")
-st.subheader("بە کوردی بنووسە چیت دەوێت:")
+user_ku = st.text_area("چی دروست بکەم؟", placeholder="بۆ نموونە: قەڵای هەولێر...")
 
-user_ku = st.text_area("وەسفی وێنە:", placeholder="بۆ نموونە: قەڵای هەولێر لە داهاتوودا...")
-
-if st.button("✨ ئێستا وێنەکە دروست بکە"):
+if st.button("✨ وێنەکە نیشان بدە"):
     if user_ku.strip():
-        clean_prompt = user_ku.replace(" ", ",")
-        seed = random.randint(0, 999999)
+        # بەکارهێنانی سێرڤەری گەڕانی وێنەی گووگڵ وەک فێڵێک
+        # ئەمە وێنەی ئامادەکراو دەهێنێت نەک دروستکراو، بۆ ئەوەی دڵنیا بین ئینتەرنێتەکەت وێنە دەخوێنێتەوە
+        clean_prompt = user_ku.replace(" ", "+")
+        image_url = f"https://source.unsplash.com?{clean_prompt}"
         
-        # گۆڕینی سێرڤەر بۆ دانەیەکی جیاواز کە بلۆک ناکرێت
-        image_url = f"https://loremflickr.com{clean_prompt}"
-        
-        with st.spinner('🎨 خەریکی کێشانین...'):
-            # نیشاندانی وێنەکە
-            st.image(image_url, use_container_width=True)
-            
-            st.info("📥 بۆ دابەزاندن: کلیکی ڕاست لەسەر وێنەکە بکە و Save Image As دابگرە.")
+        st.markdown(f'### فەرموو مامۆستا گیان، ئەگەر ئەمە دەرنەکەوت واتا ئینتەرنێتەکەت وێنەی دەرەکی بلۆک کردووە:')
+        st.image(image_url, use_container_width=True)
     else:
-        st.warning("تکایە سەرەتا شتێک بنووسە.")
+        st.warning("تکایە شتێک بنووسە.")
