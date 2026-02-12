@@ -1,43 +1,52 @@
 import streamlit as st
 from gradio_client import Client
-import time
+import os
 
-# ١. ڕێکخستنی لاپەڕە
-st.set_page_config(page_title="ڤیدیۆساز", layout="centered")
+# ١. دیزاینی شاشە
+st.set_page_config(page_title="گۆڕینی ڕووخسار", layout="centered")
 
 st.markdown("""
     <style>
-    .stTextArea, .stTitle { text-align: right; direction: rtl; }
-    .stButton>button { width: 100%; background-color: #007bff; color: white; border-radius: 10px; height: 3em; font-weight: bold; }
+    .stTextArea, .stTitle, .stSubheader { text-align: right; direction: rtl; color: #4B0082; }
+    .stButton>button { 
+        width: 100%; 
+        background: linear-gradient(45deg, #FF8C00, #FF0000); 
+        color: white; border-radius: 12px; height: 3.5em; font-weight: bold;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🎥 دروستکەری ڤیدیۆی بێبەرامبەر")
-st.info("ئەگەر سێرڤەرەکە قەرەباڵغ بوو، ئێمە خۆمان دووبارە تاقی دەکەینەوە...")
+st.title("🎭 گۆڕینی تەمەن بە زیرەکی دەستکرد")
+st.subheader("وێنەکەت لێرە دابنێ و تەمەنت بگۆڕە")
 
-user_input = st.text_area("چی دروست بکەم؟ (بە ئینگلیزی):", placeholder="Example: A fast car in the mountain...")
+# ٢. بەشی بارکردنی وێنە (Upload)
+uploaded_file = st.file_uploader("وێنەکەت لێرە هەڵبژێرە...", type=["jpg", "jpeg", "png"])
 
-if st.button("دروستکردنی ڤیدیۆ"):
-    if user_input.strip():
-        with st.spinner('خەریکی دروستکردنین... تکایە کەمێک ئارام بگرە'):
-            success = False
-            attempts = 0
-            while not success and attempts < 3: # ٣ جار تاقی دەکاتەوە ئەگەر هەڵەی دا
-                try:
-                    # بەکارهێنانی سێرڤەرێکی جێگیرتر بۆ ڤیدیۆی کورت
-                    client = Client("aliabd/stable-video-diffusion")
-                    result = client.predict(user_input, 42, api_name="/generate_video")
-                    
-                    if result:
-                        st.success("فەرموو مامۆستا گیان، ڤیدیۆکە ئامادەیە:")
-                        st.video(result)
-                        success = True
-                except Exception:
-                    attempts += 1
-                    st.warning(f"هەوڵی ژمارە {attempts}: سێرڤەر قەرەباڵغە، کەمێکی تر چاوەڕێ بکە...")
-                    time.sleep(5) # ٥ چرکە چاوەڕێ دەکات و دووبارە دەست پێ دەکاتەوە
-            
-            if not success:
-                st.error("ببوورە مامۆستا، سێرڤەرەکان زۆر قەرەباڵغن. تکایە چەند خولەکێکی تر تاقی بکەرەوە.")
+# ٣. وەسفی گۆڕانکارییەکە
+target_age = st.radio("دەتەوێت چۆن دەربکەویت؟", ("ببم بە پیر (Old man)", "ببم بە گەنج (Young person)"))
+
+if st.button("✨ جادوو بکە"):
+    if uploaded_file is not None:
+        with st.spinner('🎨 خەریکی گۆڕینی ڕووخسارین...'):
+            try:
+                # پاشکەوتکردنی وێنە بارکراوەکە بە کاتی
+                with open("input.png", "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                
+                # بەکارهێنانی مۆدێلی InstructPix2Pix کە وێنە دەگۆڕێت
+                client = Client("timbrooks/instruct-pix2pix")
+                result = client.predict(
+                    image="input.png",
+                    prompt=f"Make this person look like a {target_age}",
+                    api_name="/predict"
+                )
+
+                if result:
+                    st.success("فەرموو مامۆستا گیان، ئەمەش ئەنجامەکە:")
+                    st.image(result, use_container_width=True)
+                else:
+                    st.error("سێرڤەرەکە وەڵامی نەبوو، دووبارە تاقی بکەرەوە.")
+            except Exception as e:
+                st.error("سێرڤەرەکە کەمێک قەرەباڵغە، تکایە کەمێکی تر کلیک بکەرەوە.")
     else:
-        st.warning("تکایە وەسفەکە بنووسە.")
+        st.warning("تکایە سەرەتا وێنەیەک هەڵبژێرە.")
