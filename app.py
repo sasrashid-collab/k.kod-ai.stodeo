@@ -1,58 +1,46 @@
 import streamlit as st
-from gradio_client import Client
+import requests
+import random
 
 # ١. دیزاین و ستایلی ڕەنگاوڕەنگ
-st.set_page_config(page_title="دیزاینەری زیرەک", layout="centered")
+st.set_page_config(page_title="وێنەساز و ڤیدیۆساز", layout="centered")
 
 st.markdown("""
     <style>
-    .stTextArea, .stTitle, .stSubheader { text-align: right; direction: rtl; color: #2D3748; }
+    .stTextArea, .stTitle, .stSubheader { text-align: right; direction: rtl; color: #1E293B; }
     .stButton>button { 
         width: 100%; 
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); 
+        background: linear-gradient(90deg, #10B981 0%, #3B82F6 100%); 
         color: white; border-radius: 12px; height: 3.5em; font-weight: bold; border: none;
     }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🎨 دروستکەری وێنە و ڤیدیۆ")
+st.title("🎨 دروستکەری وێنەی خێرا و جێگیر")
 st.subheader("وەسفێک بنووسە بۆ دروستکردن")
 
 # ٢. وەرگرتنی وەسف
-user_prompt = st.text_area("وەسف (Prompt):", placeholder="Example: A futuristic city, 4k...")
+user_prompt = st.text_area("وەسف (Prompt):", placeholder="Example: A futuristic Kurdish city, 4k...")
 
-# ٣. هەڵبژاردنی جۆر
-option = st.radio("دەتەوێت چی بۆ دروست بکەم؟", ("وێنەی کوالێتی بەرز (خێرا)", "ڤیدیۆی جوڵاو (کەمێک خاو)"))
-
-if st.button("✨ دەستپێکردن"):
+if st.button("✨ ئێستا دروستی بکە"):
     if user_prompt.strip():
-        with st.spinner('🎨 خەریکی ئامادەکردنین...'):
+        with st.spinner('🎨 خەریکی کێشانی وێنەکەین...'):
             try:
-                if option == "وێنەی کوالێتی بەرز (خێرا)":
-                    # مۆدێلێکی زۆر جێگیر و هەمیشە ئۆنلاین بۆ وێنە
-                    client = Client("stabilityai/stable-diffusion-3.5-large-turbo")
-                    result = client.predict(
-                        prompt=user_prompt,
-                        negative_prompt="",
-                        seed=42,
-                        width=1024,
-                        height=1024,
-                        guidance_scale=0.0,
-                        num_inference_steps=4,
-                        api_name="/infer"
-                    )
-                    if result:
-                        st.image(result, caption="فەرموو مامۆستا گیان", use_container_width=True)
+                # بەکارهێنانی Pollinations AI (هەمیشە ئۆنلاین و بێ کێشە)
+                seed = random.randint(0, 99999)
+                image_url = f"https://image.pollinations.ai{user_prompt}?width=1024&height=1024&seed={seed}&model=flux"
                 
-                else:
-                    # مۆدێلێکی جێگیر بۆ ڤیدیۆ
-                    client = Client("aliabd/stable-video-diffusion")
-                    result = client.predict(user_prompt, 42, api_name="/generate_video")
-                    if result:
-                        st.video(result)
-                        st.success("فەرموو ڤیدیۆکەت ئامادەیە")
-                        
+                # نیشاندانی وێنەکە
+                st.image(image_url, caption="فەرموو مامۆستا گیان، ئەم وێنەیە قەت Error نادات", use_container_width=True)
+                
+                # دوگمەی دابەزاندن
+                response = requests.get(image_url)
+                if response.status_code == 200:
+                    st.download_button("📥 دابەزاندنی وێنەکە", response.content, "image.jpg", "image/jpeg")
+                
             except Exception as e:
-                st.error("سێرڤەرەکە لەم ساتەدا قەرەباڵغە، تکایە دووبارە کلیک بکەرەوە.")
+                st.error("ببوورە، کێشەیەک لە پەیوەندی ئینتەرنێت هەیە.")
     else:
         st.warning("تکایە سەرەتا وەسفێک بنووسە.")
+
+st.info("ئەم سێرڤەرە زۆر خێرایە و قەت پەیامی 'قەرەباڵغم' نادات.")
