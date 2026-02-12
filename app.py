@@ -1,41 +1,39 @@
 import streamlit as st
 import random
 
-# ١. ڕێکخستنی لاپەڕە
+# ١. دیزاینی شاشە
 st.set_page_config(page_title="وێنەسازی کوردی", layout="centered")
 
 st.markdown("""
     <style>
     .stTextArea, .stTitle, .stSubheader { text-align: right; direction: rtl; }
-    .stButton>button { width: 100%; background: #28a745; color: white; border-radius: 12px; height: 3.5em; font-weight: bold; }
-    .img-frame { width: 100%; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    .stButton>button { width: 100%; background: #2ecc71; color: white; border-radius: 12px; height: 3.5em; font-weight: bold; }
+    .img-box { width: 100%; border-radius: 15px; border: 3px solid #eee; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🎨 وێنەسازی کوردی (بێ کێشە)")
-st.subheader("وەسفێک بنووسە بە کوردی یان ئینگلیزی:")
+st.title("🎨 وێنەسازی بێ کێشە")
+st.subheader("بە کوردی بنووسە چیت دەوێت:")
 
-user_input = st.text_area("چی دروست بکەم؟", placeholder="بۆ نموونە: ئەسپێکی سپی لەسەر مانگ...")
+user_ku = st.text_area("وەسفی وێنە:", placeholder="بۆ نموونە: شارێکی کوردی لە داهاتوودا...")
 
-if st.button("✨ وێنەکە دروست بکە"):
-    if user_input.strip():
+if st.button("✨ ئێستا وێنەکە دروست بکە"):
+    if user_ku.strip():
         # دروستکردنی لوتکەی لینکەکە
-        clean_prompt = user_input.replace(" ", "%20")
+        clean_prompt = user_ku.replace(" ", "%20")
         seed = random.randint(0, 999999)
-        # بەکارهێنانی لینکی ڕاستەوخۆ کە بلۆک نابێت
-        image_url = f"https://image.pollinations.ai{clean_prompt}?width=800&height=800&seed={seed}&nologo=true"
+        image_url = f"https://image.pollinations.ai{clean_prompt}?width=1024&height=1024&seed={seed}&nologo=true"
         
-        with st.spinner('🎨 چاوەڕێ بکە...'):
-            # بەکارهێنانی HTML بۆ نیشاندانی وێنەکە تاوەکو سێرڤەر ڕێگری لێ نەکات
-            st.markdown(f'<img src="{image_url}" class="img-frame">', unsafe_allow_html=True)
+        with st.spinner('🎨 خەریکی کێشانین...'):
+            # نیشاندانی وێنەکە ڕاستەوخۆ لە ڕێگەی st.image (ئەمە بلۆک نابێت)
+            st.image(image_url, use_container_width=True)
             
+            # ڕێنمایی پاشکەوتکردن بۆ گەنجەکە بە زمانی کوردی
             st.markdown(f"""
-                <div style="text-align: right; direction: rtl; margin-top: 15px; padding: 10px; background: #f0f2f6; border-radius: 10px;">
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 10px; text-align: right; direction: rtl; border-right: 5px solid #2ecc71;">
                 <b>📥 چۆن وێنەکە پاشکەوت دەکەیت؟</b><br>
-                پەنجە لەسەر وێنەکە دابگرە و بژاردەی <b>(Download Image)</b> یان <b>(Save Image)</b> هەڵبژێرە.
-                <br><br>
-                <a href="{image_url}" target="_blank" style="color: #007bff; text-decoration: none;">🔗 کلیک لێرە بکە بۆ بینینی وێنەکە لە پەڕەیەکی تر</a>
+                بەهۆی پاراستنی مۆبایلەکەت، کلیک کار ناکات. تکایە <b>پەنجە لەسەر وێنەکە دابگرە</b> و بژاردەی <b>(Download Image)</b> یان <b>(Save Image)</b> هەڵبژێرە.
                 </div>
             """, unsafe_allow_html=True)
     else:
-        st.warning("تکایە سەرەتا وەسفێک بنووسە.")
+        st.warning("تکایە سەرەتا شتێک بنووسە.")
