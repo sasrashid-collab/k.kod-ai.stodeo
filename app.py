@@ -1,52 +1,53 @@
 import streamlit as st
 from gradio_client import Client
-import os
+import time
 
-# ١. دیزاینی شاشە
-st.set_page_config(page_title="گۆڕینی ڕووخسار", layout="centered")
+# ١. دیزاین و ستایلی ڕەنگاوڕەنگ
+st.set_page_config(page_title="دیزاینەری زیرەک", layout="centered")
 
 st.markdown("""
     <style>
-    .stTextArea, .stTitle, .stSubheader { text-align: right; direction: rtl; color: #4B0082; }
+    .stTextArea, .stTitle, .stSubheader { text-align: right; direction: rtl; color: #2D3748; }
     .stButton>button { 
         width: 100%; 
-        background: linear-gradient(45deg, #FF8C00, #FF0000); 
-        color: white; border-radius: 12px; height: 3.5em; font-weight: bold;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); 
+        color: white; border-radius: 12px; height: 3.5em; font-weight: bold; border: none;
     }
+    .stButton>button:hover { opacity: 0.9; transform: scale(1.02); }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🎭 گۆڕینی تەمەن بە زیرەکی دەستکرد")
-st.subheader("وێنەکەت لێرە دابنێ و تەمەنت بگۆڕە")
+st.title("🎨 دروستکەری وێنە و ڤیدیۆی زیرەک")
+st.subheader("چی لە خەیاڵتە؟ لێرە بە ئینگلیزی بنووسە")
 
-# ٢. بەشی بارکردنی وێنە (Upload)
-uploaded_file = st.file_uploader("وێنەکەت لێرە هەڵبژێرە...", type=["jpg", "jpeg", "png"])
+# ٢. وەرگرتنی وەسف
+user_prompt = st.text_area("وەسف (Prompt):", placeholder="Example: A beautiful waterfall in the mountains, 4k...")
 
-# ٣. وەسفی گۆڕانکارییەکە
-target_age = st.radio("دەتەوێت چۆن دەربکەویت؟", ("ببم بە پیر (Old man)", "ببم بە گەنج (Young person)"))
+# ٣. هەڵبژاردنی جۆر (وێنە یان ڤیدیۆ)
+option = st.radio("دەتەوێت چی بۆ دروست بکەم؟", ("وێنەی کوالێتی بەرز (خێرا)", "ڤیدیۆی جوڵاو (کەمێک خاو)"))
 
-if st.button("✨ جادوو بکە"):
-    if uploaded_file is not None:
-        with st.spinner('🎨 خەریکی گۆڕینی ڕووخسارین...'):
+if st.button("✨ دەستپێکردن"):
+    if user_prompt.strip():
+        with st.spinner('🎨 خەریکی ئامادەکردنین...'):
             try:
-                # پاشکەوتکردنی وێنە بارکراوەکە بە کاتی
-                with open("input.png", "wb") as f:
-                    f.write(uploaded_file.getbuffer())
+                if option == "وێنەی کوالێتی بەرز (خێرا)":
+                    # مۆدێلی وێنە (زۆر جێگیر و خێرا)
+                    client = Client("black-forest-labs/FLUX.1-schnell")
+                    result = client.predict(prompt=user_prompt, seed=0, width=1024, height=1024, num_inference_steps=4, api_name="/infer")
+                    if result:
+                        st.image(result, caption="فەرموو وێنەکەت ئامادەیە", use_container_width=True)
                 
-                # بەکارهێنانی مۆدێلی InstructPix2Pix کە وێنە دەگۆڕێت
-                client = Client("timbrooks/instruct-pix2pix")
-                result = client.predict(
-                    image="input.png",
-                    prompt=f"Make this person look like a {target_age}",
-                    api_name="/predict"
-                )
-
-                if result:
-                    st.success("فەرموو مامۆستا گیان، ئەمەش ئەنجامەکە:")
-                    st.image(result, use_container_width=True)
                 else:
-                    st.error("سێرڤەرەکە وەڵامی نەبوو، دووبارە تاقی بکەرەوە.")
+                    # مۆدێلی ڤیدیۆ (کەمێک قەرەباڵغە)
+                    client = Client("aliabd/stable-video-diffusion")
+                    result = client.predict(user_prompt, 42, api_name="/generate_video")
+                    if result:
+                        st.video(result)
+                        st.success("فەرموو ڤیدیۆکەت ئامادەیە")
+                    else:
+                        st.error("سێرڤەری ڤیدیۆ لەم کاتەدا وەڵامی نییە، وێنەکە تاقی بکەرەوە.")
+                        
             except Exception as e:
-                st.error("سێرڤەرەکە کەمێک قەرەباڵغە، تکایە کەمێکی تر کلیک بکەرەوە.")
+                st.error("سێرڤەرەکە کەمێک ماندووە، تکایە دووبارە کلیک بکەرەوە.")
     else:
-        st.warning("تکایە سەرەتا وێنەیەک هەڵبژێرە.")
+        st.warning("تکایە سەرەتا وەسفێک بنووسە.")
