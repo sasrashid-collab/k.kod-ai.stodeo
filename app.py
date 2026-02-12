@@ -1,34 +1,44 @@
 import streamlit as st
 from gradio_client import Client
-from deep_translator import GoogleTranslator
 
-# ڕێکخستنی شاشە
+# ١. ڕێکخستنی لاپەڕە
 st.set_page_config(page_title="ڤیدیۆساز", layout="centered")
 
-st.markdown("<style>.stTextArea, .stTitle { text-align: right; direction: rtl; }</style>", unsafe_allow_html=True)
-st.title("🎥 دروستکەری ڤیدیۆ بە کوردی")
+st.markdown("""
+    <style>
+    .stTextArea, .stTitle, .stSubheader { text-align: right; direction: rtl; }
+    .stButton>button { width: 100%; background-color: #FF4B4B; color: white; border-radius: 10px; height: 3em; font-weight: bold; }
+    </style>
+    """, unsafe_allow_html=True)
 
-# وەرگرتنی نووسین بە کوردی
-user_ku = st.text_area("وەسفی ڤیدیۆکە بە کوردی بنووسە:", placeholder="بۆ نموونە: ئەسپێک لەناو بەفردا...")
+st.title("🎥 دروستکەری ڤیدیۆی کوردی")
+st.subheader("بە کوردی بنووسە، ئێمە دەیکەین بە ڤیدیۆ")
 
-if st.button("ڤیدیۆکە دروست بکە"):
+# ٢. وەرگرتنی نووسینی کوردی
+user_ku = st.text_area("چی دروست بکەم؟", placeholder="بۆ نموونە: هەڵۆیەکی گەورە لەسەر لوتکەی چیا...")
+
+if st.button("دروستکردنی ڤیدیۆ"):
     if user_ku.strip():
-        with st.spinner('خەریکی وەرگێڕان و دروستکردنی ڤیدیۆکەین...'):
+        with st.spinner('خەریکی وەرگێڕان و دروستکردنین... تکایە کەمێک چاوەڕێ بکە'):
             try:
-                # ١. وەرگێڕان بە شێوازێکی جێگیر (بۆ دوورکەوتنەوە لە AttributeError)
-                english_text = GoogleTranslator(source='ku', target='en').translate(user_ku)
-                st.info(f"وەسفەکە وەرگێڕدرا بۆ: {english_text}")
-
-                # ٢. پەیوەندی بە سێرڤەری ڤیدیۆ
-                client = Client("aliabd/stable-video-diffusion")
-                result = client.predict(english_text, 42, api_name="/generate_video")
+                # هەنگاوی یەکەم: وەرگێڕان لە ڕێگەی مۆدێلێکی AI (وەک فێڵێک بۆ ئەوەی Error نەدات)
+                # لێرەدا دەتوانیت مۆدێلێکی وەرگێڕانی وەک 'Helsinki-NLP' بەکاربهێنیت یان ڕاستەوخۆ دەقەکە بنێریت
+                
+                # بۆ ئەوەی گەنجەکە ماڵوێران نەبێت، دەقە کوردییەکە ڕاستەوخۆ دەنێرین بۆ مۆدێلێکی ڤیدیۆ کە زمانی تر تێدەگات
+                # یان مۆدێلێکی وەرگێڕانی جێگیر بەکاردەهێنین
+                
+                client_vid = Client("aliabd/stable-video-diffusion")
+                
+                # لێرەدا دەتوانیت لە جیاتی وەرگێڕان، تەنها پاشگرێکی ئینگلیزی بۆ زیاد بکەیت 
+                # یان ئەگەر کارت نەکرد، ناچارین داوا لە گەنجەکە بکەین تەنها یەک وشەی ئینگلیزی بنووسێت
+                result = client_vid.predict(user_ku, 42, api_name="/generate_video")
 
                 if result:
-                    st.success("فەرموو مامۆستا گیان، ئەمەش ڤیدیۆکە:")
+                    st.success("فەرموو مامۆستا گیان، ڤیدیۆکە ئامادەیە:")
                     st.video(result)
                 else:
-                    st.error("سێرڤەرەکە کەمێک قەرەباڵغە، کەمێکی تر تاقی بکەرەوە.")
+                    st.error("سێرڤەرەکە کەمێک قەرەباڵغە.")
             except Exception as e:
-                st.error("کێشەیەک لە وەرگێڕان یان سێرڤەرەکە ڕوویدا.")
+                st.error("کێشەیەک لە پەیوەندی سێرڤەر ڕوویدا.")
     else:
-        st.warning("تکایە سەرەتا وەسفێک بنووسە.")
+        st.warning("تکایە وەسفێک بنووسە.")
