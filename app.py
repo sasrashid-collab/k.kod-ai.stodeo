@@ -1,35 +1,47 @@
 import streamlit as st
+import requests
 import random
 
-# ١. دیزاینی شاشە
+# ١. دیزاینی لاپەڕە
 st.set_page_config(page_title="وێنەسازی کوردی", layout="centered")
 
 st.markdown("""
     <style>
     .stTextArea, .stTitle, .stSubheader { text-align: right; direction: rtl; }
-    .stButton>button { width: 100%; background: #E91E63; color: white; border-radius: 12px; height: 3.5em; font-weight: bold; border: none; }
+    .stButton>button { width: 100%; background: #28a745; color: white; border-radius: 12px; height: 3.5em; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🎨 وێنەسازی زیرەک (وەشانی جێگیر)")
+st.title("🎨 وێنەسازی کوردی (وەشانی جێگیر)")
 st.subheader("بە کوردی بنووسە چیت دەوێت:")
 
-user_ku = st.text_area("چی دروست بکەم؟", placeholder="بۆ نموونە: شارێکی کوردی لە داهاتوودا...")
+user_ku = st.text_area("وەسفی وێنەکە:", placeholder="بۆ نموونە: ئەسپێکی سپی لەناو بەفردا...")
 
 if st.button("✨ وێنەکە دروست بکە"):
     if user_ku.strip():
-        # گۆڕینی وەسفەکە بۆ لینکێکی جیاواز کە بلۆک نابێت
-        clean_prompt = user_ku.replace(" ", "+")
+        # دروستکردنی ناونیشانی وێنە
+        clean_prompt = user_ku.replace(" ", "%20")
         seed = random.randint(0, 999999)
-        
-        # بەکارهێنانی سێرڤەرێکی تری جیهانی (DummyImage/Robohash یان لایەنی تر)
-        # لێرەدا فێڵێکی تر دەکەین بۆ ئەوەی براوزەر بلۆکی نەکات
         image_url = f"https://image.pollinations.ai{clean_prompt}?width=800&height=800&seed={seed}&nologo=true"
         
         with st.spinner('🎨 خەریکی کێشانی وێنەکەین...'):
-            # بەکارهێنانی مارکداون بۆ نیشاندانی وێنەکە (براوزەر کەمتر بلۆکی دەکات)
-            st.markdown(f'<img src="{image_url}" style="width:100%; border-radius:15px;">', unsafe_allow_html=True)
-            
-            st.info("📥 بۆ دابەزاندن: پەنجە لەسەر وێنەکە دابگرە و (Download Image) هەڵبژێرە.")
+            try:
+                # هەنگاوی گرنگ: دابەزاندنی وێنەکە بۆ ناو کۆدەکە
+                response = requests.get(image_url)
+                if response.status_code == 200:
+                    # نیشاندانی وێنەکە وەک داتا (نەک وەک لینک)
+                    st.image(response.content, use_container_width=True)
+                    
+                    # دروستکردنی دوگمەی دابەزاندنی ڕاستەقینە
+                    st.download_button(
+                        label="📥 وێنەکە دابەزێنە ناو مۆبایلەکەت",
+                        data=response.content,
+                        file_name=f"kurd_ai_{seed}.jpg",
+                        mime="image/jpeg"
+                    )
+                else:
+                    st.error("سێرڤەرەکە لەم ساتەدا وەڵامی نییە.")
+            except:
+                st.error("کێشەیەک لە پەیوەندی ئینتەرنێت هەیە.")
     else:
         st.warning("تکایە سەرەتا شتێک بنووسە.")
