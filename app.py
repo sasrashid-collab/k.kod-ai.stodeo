@@ -1,45 +1,34 @@
 import streamlit as st
 from gradio_client import Client
-from googletrans import Translator # وەرگێڕی فەرمی
+from deep_translator import GoogleTranslator
 
-# ١. ڕێکخستنی شاشە
-st.set_page_config(page_title="ڤیدیۆساز بە کوردی", layout="centered")
+# ڕێکخستنی شاشە
+st.set_page_config(page_title="ڤیدیۆساز", layout="centered")
 
-st.markdown("""
-    <style>
-    .stTextArea, .stTitle, .stSubheader { text-align: right; direction: rtl; }
-    .stButton>button { width: 100%; background-color: #28a745; color: white; border-radius: 10px; height: 3em; }
-    </style>
-    """, unsafe_allow_html=True)
+st.markdown("<style>.stTextArea, .stTitle { text-align: right; direction: rtl; }</style>", unsafe_allow_html=True)
+st.title("🎥 دروستکەری ڤیدیۆ بە کوردی")
 
-st.title("🎥 دروستکەری ڤیدیۆ بە زمانی کوردی")
-st.subheader("بە کوردی بنووسە، ئێمە دەیکەین بە ڤیدیۆ")
+# وەرگرتنی نووسین بە کوردی
+user_ku = st.text_area("وەسفی ڤیدیۆکە بە کوردی بنووسە:", placeholder="بۆ نموونە: ئەسپێک لەناو بەفردا...")
 
-# ٢. وەرگرتنی وەسف بە کوردی
-user_ku = st.text_area("چی دروست بکەین؟", placeholder="بۆ نموونە: پڵنگێک لەناو جەنگەڵدا ڕادەکات...")
-
-if st.button("دەستپێکردن"):
+if st.button("ڤیدیۆکە دروست بکە"):
     if user_ku.strip():
         with st.spinner('خەریکی وەرگێڕان و دروستکردنی ڤیدیۆکەین...'):
             try:
-                # هەنگاوی یەکەم: وەرگێڕان بۆ ئینگلیزی
-                translator = Translator()
-                translation = translator.translate(user_ku, src='ku', dest='en')
-                english_text = translation.text
-                
+                # ١. وەرگێڕان بە شێوازێکی جێگیر (بۆ دوورکەوتنەوە لە AttributeError)
+                english_text = GoogleTranslator(source='ku', target='en').translate(user_ku)
                 st.info(f"وەسفەکە وەرگێڕدرا بۆ: {english_text}")
 
-                # هەنگاوی دووەم: ناردنی بۆ سێرڤەری ڤیدیۆ
+                # ٢. پەیوەندی بە سێرڤەری ڤیدیۆ
                 client = Client("aliabd/stable-video-diffusion")
                 result = client.predict(english_text, 42, api_name="/generate_video")
 
                 if result:
-                    st.success("فەرموو مامۆستا گیان، ڤیدیۆکە ئامادەیە:")
+                    st.success("فەرموو مامۆستا گیان، ئەمەش ڤیدیۆکە:")
                     st.video(result)
                 else:
-                    st.error("سێرڤەرەکە وەڵامی نییە، دووبارە تاقی بکەرەوە.")
-                    
+                    st.error("سێرڤەرەکە کەمێک قەرەباڵغە، کەمێکی تر تاقی بکەرەوە.")
             except Exception as e:
-                st.error(f"کێشەیەک ڕوویدا: تکایە دڵنیابە لە ئینتەرنێتەکەت.")
+                st.error("کێشەیەک لە وەرگێڕان یان سێرڤەرەکە ڕوویدا.")
     else:
-        st.warning("تکایە وەسفێک بنووسە.")
+        st.warning("تکایە سەرەتا وەسفێک بنووسە.")
