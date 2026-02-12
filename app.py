@@ -2,55 +2,47 @@ import streamlit as st
 import os
 from gradio_client import Client
 
-# ١. ڕێکخستنی شێوەی لاپەڕەکە
+# ١. ڕێکخستنی لاپەڕە
 st.set_page_config(page_title="دروستکەری ڤیدیۆ", layout="centered")
 
-# ٢. ستایلی ڕەنگەکان و نووسینی کوردی (ڕاست بۆ چەپ)
+# ٢. ستایلی کوردی
 st.markdown("""
     <style>
     .stTextArea, .stMarkdown, .stTitle, .stSubheader { text-align: right; direction: rtl; }
-    .stButton>button { width: 100%; background-color: #FF4B4B; color: white; border-radius: 12px; height: 3em; }
+    .stButton>button { width: 100%; background-color: #008CBA; color: white; border-radius: 10px; height: 3em; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🎥 دروستکەری ڤیدیۆی زیرەک")
-st.subheader("وەسفی ڤیدیۆکە بنووسە (بۆ نموونە: پیاوێکی کورد لە قەڵای هەولێر)")
+st.title("🎥 دروستکەری ڤیدیۆی خێرا")
+st.subheader("وەسفی ڤیدیۆکە بە ئینگلیزی بنووسە:")
 
-# ٣. شوێنی نووسینی وەسفەکە
-user_prompt = st.text_area("چی لە خەیاڵتە؟", placeholder="بۆ نموونە: A horse running in the snow...")
+user_prompt = st.text_area("چی دروست بکەم؟", placeholder="بۆ نموونە: A beautiful sunset over the mountains...")
 
-if st.button("دروستکردنی ڤیدیۆ"):
+if st.button("دەستپێکردنی دروستکردن"):
     if user_prompt.strip():
-        with st.spinner('خەریکی دروستکردنی ڤیدیۆکەین... تکایە کەمێک چاوەڕێ بکە'):
+        with st.spinner('تکایە کەمێک چاوەڕێ بکە، خەریکە دروستی دەکەین...'):
             try:
-                # ٤. پەیوەندیکردن بە مۆدێلەکە
-                client = Client("THUDM/CogVideoX-5B-Space")
+                # بەکارهێنانی مۆدێلێکی جێگیرتر و خێراتر
+                client = Client("aliabd/stable-video-diffusion")
                 
-                # ٥. ناردنی زانیارییەکان بەبێ ناوی پارامیتەرەکان بۆ دوورکەوتنەوە لە هەڵەی Seed
-                # لێرەدا تەنها زانیارییەکان بە ڕیزبەندی دەنێرین
+                # ناردنی وەسفەکە بۆ سێرڤەر
                 result = client.predict(
-                    user_prompt + ", cinematic style, 4k", # دەقی ڤیدیۆکە
-                    42,                                   # Seed
-                    6,                                    # Guidance scale
-                    50,                                   # Inference steps
-                    api_name="/generate"
+                    user_prompt, # Prompt
+                    42,          # Seed
+                    api_name="/generate_video"
                 )
 
-                # ٦. وەرگرتنی ئەنجام و نیشاندانی
                 if result:
-                    # ئەگەر ئەنجامەکە لیست بێت دانەی یەکەمی وەردەگرین
-                    video_path = result[0] if isinstance(result, list) else result
+                    # نیشاندانی ڤیدیۆکە
+                    st.success("تەواو بوو! فەرموو ڤیدیۆکە ئامادەیە:")
+                    st.video(result)
                     
-                    if os.path.exists(video_path):
-                        st.success("ڤیدیۆکە بە سەرکەوتوویی دروستکرا!")
-                        st.video(video_path)
-                        
-                        with open(video_path, "rb") as f:
-                            st.download_button("📥 دابەزاندنی ڤیدیۆکە", f, "video.mp4")
+                    with open(result, "rb") as f:
+                        st.download_button("📥 دابەزاندنی ڤیدیۆکە", f, "video.mp4")
                 else:
-                    st.error("سێرڤەرەکە نەیتوانی ڤیدیۆکە دروست بکات.")
+                    st.error("ببوورە، سێرڤەرەکە لەم کاتەدا وەڵامی نییە. کەمێکی تر تاقی بکەرەوە.")
                     
             except Exception as e:
-                st.error(f"کێشەیەک ڕوویدا: {str(e)}")
+                st.error("کێشەیەک لە پەیوەندی سێرڤەر ڕوویدا. تکایە دووبارە کلیک بکەرەوە.")
     else:
         st.warning("تکایە سەرەتا وەسفێک بنووسە.")
